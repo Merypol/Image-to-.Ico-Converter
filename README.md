@@ -1,6 +1,6 @@
 IMAGE TO ICON CONVERTER : 
 
-USES - Simply allows you to drop and image into it, automatically convert it the .ICO format and then save it in a folder of your choice.
+USES - Simply allows you to drop an image into it, automatically convert it the .ICO format and then save it in a folder of your choice.
 
 Copyright (C) Matthew Glen
 
