@@ -1,0 +1,355 @@
+IMAGE TO ICON CONVERTER : 
+
+USES - Simply allows you to drop and image into it, automatically convert it the .ICO format and then save it in a folder of your choice.
+
+Copyright (C) Matthew Glen
+
+"This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/."
+
+SOURCEFOLLOWS/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+import os
+import io
+import struct
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QVBoxLayout, QHBoxLayout, QFileDialog, QSpacerItem, QSizePolicy, QMessageBox, QPushButton, QTextEdit, QWidget
+from PyQt5.QtGui import QPixmap, QFont, QColor
+from PyQt5.QtCore import Qt, QMimeData, QSize
+from PIL import Image
+from PyQt5.QtWidgets import QDesktopWidget
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        # Initialize saved_successfully variable
+        self.saved_successfully = False
+
+
+        # Set window flags and fixed size
+        self.setWindowFlags(Qt.Window)
+        self.setFixedSize(800, 800)
+
+        # Set window title and size
+        self.setWindowTitle("Image to ICON Converter")
+        self.setMinimumSize(800, 800)
+
+        # Center the window on the screen
+        self.center()
+
+        # Create central widget and layout
+        self.central_widget = QFrame()
+        self.central_widget.setStyleSheet("background-color: #1e1e1e;")
+        self.central_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.main_layout = QVBoxLayout()
+        self.main_layout.setAlignment(Qt.AlignCenter)
+        self.central_widget.setLayout(self.main_layout)
+
+        # Create a vertical spacer item of height 20 pixels
+        spacer_item = QSpacerItem(75, 75, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        # Add spacer item to main layout
+        self.main_layout.addItem(spacer_item)
+
+        # Add title label
+        title_label = QLabel("IMAGE TO ICON CONVERTER")
+        font = QFont()
+        font.setFamily("Impact")
+        font.setPointSize(24)
+        font.setBold(True)
+        title_label.setFont(font)
+        title_label.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+
+        # Set text color
+        cyan_color = QColor(251, 87, 107)  # Create a cyan color
+        dark_cyan_color = cyan_color.darker(50)  # Create a darker shade of cyan
+        palette = title_label.palette()
+        palette.setColor(title_label.foregroundRole(), dark_cyan_color)
+        title_label.setPalette(palette)
+
+        self.main_layout.addWidget(title_label)
+
+        # Create a vertical spacer item of height 20 pixels
+        spacer_item = QSpacerItem(25, 25, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        # Add spacer item to main layout
+        self.main_layout.addItem(spacer_item)
+
+        # Add drag and drop label
+        self.drag_label = QLabel()
+        self.drag_label.setFixedSize(300, 300)
+        self.drag_label.setStyleSheet("background-color: #2d2d2d; color: #ffffff; border-radius: 20px;")
+        self.drag_label.setAlignment(Qt.AlignCenter)
+        self.drag_label.setText("Drag and drop an image here")
+        self.drag_label.setAcceptDrops(True)
+
+        # Connect signal to drag label
+        self.setAcceptDrops(True)
+
+        # Add label to main layout
+        self.main_layout.addWidget(self.drag_label, alignment=Qt.AlignCenter)
+
+        # Create a vertical spacer item of height 20 pixels
+        spacer_item = QSpacerItem(25, 25, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        # Add spacer item to main layout
+        self.main_layout.addItem(spacer_item)
+
+        # Add description label
+        description_label = QLabel()
+        description_label.setStyleSheet("color: #ffffff; font-size: 16px;")
+        description_label.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        description_label.setText("|| Just drag any image into the above box to convert & Save it into .ICO 3.0 format ||")
+
+        # Set font
+        font = QFont()
+        font.setFamily("Tahoma")
+        font.setPointSize(16)
+        font.setBold(False)
+        description_label.setFont(font)
+
+        self.main_layout.addWidget(description_label)
+
+        # Create a vertical spacer item of height 20 pixels
+        spacer_item = QSpacerItem(50, 50, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        # Add spacer item to main layout
+        self.main_layout.addItem(spacer_item)
+
+        copyright_label = QLabel()
+        copyright_label.setStyleSheet("color: #FB576B; font-size: 12px;")
+        copyright_label.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        copyright_label.setText("Copyright © 2023 Matthew Glen")
+
+        # Set font
+        font = QFont()
+        font.setFamily("Tahoma")
+        font.setPointSize(16)
+        font.setBold(False)
+        description_label.setFont(font)
+
+        self.main_layout.addWidget(copyright_label)
+
+        # Create a vertical spacer item of height 20 pixels
+        spacer_item = QSpacerItem(25, 25, QSizePolicy.Minimum, QSizePolicy.Fixed)
+
+        # Add description label
+        description_label = QLabel()
+        description_label.setStyleSheet("color: #FB576B; font-size: 12px;")
+        description_label.setAlignment(Qt.AlignCenter | Qt.AlignHCenter)
+        description_label.setText("This converter uses two libraries, the Licenses can be viewed below or in the files in plain text")
+        self.main_layout.addWidget(description_label)
+
+        # Add spacer item to main layout
+        self.main_layout.addItem(spacer_item)
+
+        # Add a vertical layout for license section
+        license_layout_v = QVBoxLayout()
+        license_layout_v.setAlignment(Qt.AlignCenter)
+
+        # Add a horizontal layout for license buttons
+        license_layout_h = QHBoxLayout()
+        license_layout_h.setAlignment(Qt.AlignCenter)
+
+        # Add a button to display ITIC license
+        ITIC_license_button = QPushButton("ITIC License")
+        ITIC_license_button.setFixedWidth(120)
+        ITIC_license_button.setStyleSheet("background-color: #2d2d2d; color: #ffffff; text-align: center;")
+        ITIC_license_button.clicked.connect(self.display_ITIC_license)
+        license_layout_h.addWidget(ITIC_license_button)
+
+        # Add a button to display Pillow license
+        pillow_license_button = QPushButton("PLW License")
+        pillow_license_button.setFixedWidth(120)
+        pillow_license_button.setStyleSheet("background-color: #2d2d2d; color: #ffffff; text-align: center;")
+        pillow_license_button.clicked.connect(self.display_pillow_license)
+        license_layout_h.addWidget(pillow_license_button)
+
+        # Add a PyQt5 License button
+        pyqt5_license_button = QPushButton("PQ License")
+        pyqt5_license_button.setFixedWidth(120)
+        pyqt5_license_button.setStyleSheet("background-color: #2d2d2d; color: #ffffff; text-align: center;")
+        pyqt5_license_button.clicked.connect(self.display_pyqt5_license)
+        license_layout_h.addWidget(pyqt5_license_button)
+
+        # Add license layout to vertical layout
+        license_layout_v.addLayout(license_layout_h)
+
+        # Add a QTextEdit widget to display license text
+        self.license_text_edit = QTextEdit()
+        self.license_text_edit.setReadOnly(True)
+        self.license_text_edit.setMinimumSize(500, 75)
+        self.license_text_edit.setMaximumSize(1000, 150)
+        self.license_text_edit.setStyleSheet("background-color: #2d2d2d; color: #ffffff;")
+
+        # Add license text edit to vertical layout
+        license_layout_v.addWidget(self.license_text_edit)
+
+        # Add spacer item to center license layout horizontally and vertically
+        license_layout_v.addStretch(0)
+
+        # Add license layout to main layout
+        self.main_layout.addLayout(license_layout_v)
+
+        # Add stretch item to center contents vertically and horizontally
+        self.main_layout.addStretch(1)
+
+        # Set central widget
+        self.setCentralWidget(self.central_widget)
+
+    def center(self):
+        # Get the geometry of the screen
+        screen_geometry = QDesktopWidget().availableGeometry()
+
+        # Calculate the center position of the screen
+        center_x = screen_geometry.center().x()
+        center_y = screen_geometry.center().y()
+
+        # Set the position and size of the window
+        self.resize(int(800 * 0.8), int(800 * 0.8))
+        window_width = self.frameGeometry().width()
+        window_height = self.frameGeometry().height()
+        window_x = center_x - window_width / 2
+        window_y = center_y - window_height / 2
+
+        # Move the window to the center of the screen
+        self.move(window_x, window_y)
+
+    def sizeHint(self):
+        return QSize(800, 800)
+
+    def minimumSizeHint(self):
+        return QSize(800, 800)
+
+    def display_ITIC_license(self):
+        dir_path = "LICENSES"
+        file_name = "LICENSE_ITIC.txt"
+        file_path = os.path.join(dir_path, file_name)
+        print(file_path)
+        license_text = open(file_path).read()
+        self.license_text_edit.setPlainText(license_text)
+        self.main_layout.addWidget(self.license_text_edit)
+        self.license_text_edit.setAlignment(Qt.AlignCenter)
+
+        self.main_layout.removeItem(self.main_layout.itemAt(self.main_layout.count()-1))
+        self.main_layout.addStretch(1)
+
+        # Define horizontal layout for license buttons
+        license_layout_h = QHBoxLayout()
+        license_layout_h.setAlignment(Qt.AlignCenter)
+
+        # Add horizontal spacer item to center license text horizontally
+        license_layout_h.addStretch(1)
+
+    def display_pillow_license(self):
+        dir_path = "LICENSES"
+        file_name = "LICENSE_PILLOW.txt"
+        file_path = os.path.join(dir_path, file_name)
+        print(file_path)
+        license_text = open(file_path).read()
+        self.license_text_edit.setPlainText(license_text)
+        self.main_layout.addWidget(self.license_text_edit)
+        self.license_text_edit.setAlignment(Qt.AlignCenter)
+
+        self.main_layout.removeItem(self.main_layout.itemAt(self.main_layout.count()-1))
+        self.main_layout.addStretch(1)
+
+        # Define horizontal layout for license buttons
+        license_layout_h = QHBoxLayout()
+        license_layout_h.setAlignment(Qt.AlignCenter)
+
+        # Add horizontal spacer item to center license text horizontally
+        license_layout_h.addStretch(1)
+
+    def display_pyqt5_license(self):
+        dir_path = "LICENSES"
+        file_name = "LICENSE_PYQT5.txt"
+        file_path = os.path.join(dir_path, file_name)
+        print(file_path)
+        license_text = open(file_path).read()
+        self.license_text_edit.setPlainText(license_text)
+        self.main_layout.addWidget(self.license_text_edit)
+        self.license_text_edit.setAlignment(Qt.AlignCenter)
+
+        self.main_layout.removeItem(self.main_layout.itemAt(self.main_layout.count()-1))
+        self.main_layout.addStretch(1)
+
+        # Define horizontal layout for license buttons
+        license_layout_h = QHBoxLayout()
+        license_layout_h.setAlignment(Qt.AlignCenter)
+
+        # Add horizontal spacer item to center license text horizontally
+        license_layout_h.addStretch(1)
+
+    def dragEnterEvent(self, event):
+        self.drag_label.setStyleSheet("background-color: #383838; color: #ffffff;")
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dragLeaveEvent(self, event):
+        event.ignore()
+
+    def dropEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.setDropAction(Qt.CopyAction)
+            event.accept()
+            for url in event.mimeData().urls():
+                path = url.toLocalFile()
+                if os.path.isfile(path):
+                    if path.endswith('.ico'):
+                        continue
+                    else:
+                        img = Image.open(path)
+                        ic = img.convert("RGBA")
+                        filename = os.path.basename(path)
+                        name, ext = os.path.splitext(filename)
+                        save_path, _ = QFileDialog.getSaveFileName(self, "Save file", "", "*.ico")
+                        if save_path:
+                            size = img.size
+                            ic.save(save_path, sizes=[size])
+                            QMessageBox.information(self, 'Success', 'File saved successfully.')
+                            self.drag_label.setStyleSheet("background-color: #2d2d2d; color: #ffffff; border-radius: 20px;")
+                else:
+                    event.ignore()
+        else:
+            event.ignore()
+
+    def convertToICO(self, img, icon_path):
+        sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128)]
+        sizes.reverse()
+        icon = []
+        for size in sizes:
+            icon.append(img.scaled(*size).convertToFormat(QImage.Format_ARGB32))
+        icon[0].save(icon_path, 'ICO', len(sizes))
+        self.showDialog("Conversion successful!")
+
+    def showDialog(self, message):
+        label = QLabel(message)
+        label.setAlignment(Qt.AlignCenter)
+        self.setCentralWidget(label)
+
+    def showConfirmDialog(self, message):
+        result = False
+        confirm = QMessageBox.question(self, 'Confirmation', message, QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if confirm == QMessageBox.Yes:
+            result = True
+        return result
+
+
+if __name__ == "__main__":
+    # Create QApplication and MainWindow objects
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    ex = MainWindow()
+    # Show window and run app
+    window.show()
+    sys.exit(app.exec_())
