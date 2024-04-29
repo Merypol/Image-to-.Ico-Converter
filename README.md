@@ -1,6 +1,7 @@
 IMAGE TO ICON CONVERTER : 
 
 USES - Simply allows you to drop an image into it, automatically convert it the .ICO format and then save it in a folder of your choice.
+Originally built as a tool as part of my indie development pipeline and for Python practice. Maybe it will be useful for others!
 
 Copyright (C) Matthew Glen
 
